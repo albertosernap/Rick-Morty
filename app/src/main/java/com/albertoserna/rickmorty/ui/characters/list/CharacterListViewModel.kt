@@ -6,7 +6,6 @@ import com.albertoserna.rickmorty.domain.model.Character
 import com.albertoserna.rickmorty.domain.usecase.GetCharactersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class CharacterListViewModel(
@@ -25,13 +24,12 @@ class CharacterListViewModel(
     fun loadCharacters() {
         viewModelScope.launch {
             _state.value = CharacterListState.Loading
-            getCharactersUseCase(currentPage)
-                .catch { e ->
-                    _state.value = CharacterListState.Error(e.message ?: "Unknown error")
-                }
-                .collect { characters ->
-                    _state.value = CharacterListState.Success(characters)
-                }
+            try {
+                val characters = getCharactersUseCase(currentPage)
+                _state.value = CharacterListState.Success(characters)
+            } catch (e: Exception) {
+                _state.value = CharacterListState.Error(e.message ?: "Unknown error")
+            }
         }
     }
     

@@ -4,16 +4,14 @@ import com.albertoserna.rickmorty.data.remote.api.RickMortyApi
 import com.albertoserna.rickmorty.domain.model.Character
 import com.albertoserna.rickmorty.domain.model.Location
 import com.albertoserna.rickmorty.domain.repository.CharacterRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class CharacterRepositoryImpl(
     private val api: RickMortyApi
 ) : CharacterRepository {
     
-    override suspend fun getCharacters(page: Int): Flow<List<Character>> = flow {
+    override suspend fun getCharacters(page: Int): List<Character> {
         val response = api.getCharacters(page)
-        val characters = response.results.map { dto ->
+        return response.results.map { dto ->
             Character(
                 id = dto.id,
                 name = dto.name,
@@ -27,12 +25,11 @@ class CharacterRepositoryImpl(
                 episodes = dto.episode
             )
         }
-        emit(characters)
     }
     
-    override suspend fun getCharacter(id: Int): Flow<Character> = flow {
+    override suspend fun getCharacter(id: Int): Character {
         val dto = api.getCharacter(id)
-        val character = Character(
+        return Character(
             id = dto.id,
             name = dto.name,
             status = dto.status,
@@ -44,6 +41,5 @@ class CharacterRepositoryImpl(
             image = dto.image,
             episodes = dto.episode
         )
-        emit(character)
     }
 }
