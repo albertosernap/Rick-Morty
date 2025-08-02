@@ -3,13 +3,13 @@ package com.albertoserna.rickmorty.ui.characters.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.albertoserna.rickmorty.domain.model.Character
-import com.albertoserna.rickmorty.domain.usecase.GetCharactersUseCase
+import com.albertoserna.rickmorty.domain.usecase.CharactersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CharacterListViewModel(
-    private val getCharactersUseCase: GetCharactersUseCase
+    private val charactersUseCase: CharactersUseCase
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<CharacterListState>(CharacterListState.Loading)
@@ -25,7 +25,7 @@ class CharacterListViewModel(
         viewModelScope.launch {
             _state.value = CharacterListState.Loading
             try {
-                val characters = getCharactersUseCase(currentPage)
+                val characters = charactersUseCase(currentPage)
                 _state.value = CharacterListState.Success(characters)
             } catch (e: Exception) {
                 _state.value = CharacterListState.Error(e.message ?: "Unknown error")
