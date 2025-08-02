@@ -18,8 +18,13 @@ class CharacterRemoteDataSourceImpl(private val client: HttpClient) : CharacterR
             val charactersResponse: CharacterResponseDto = response.body()
             Either.Right(charactersResponse)
         } catch (e: ClientRequestException) {
+            // Cualquier error de cliente (400-499) debe devolver CLIENT_ERROR
             Either.Left(ErrorKeys.CLIENT_ERROR)
+        } catch (e: ResponseException) {
+            // Otros errores de respuesta HTTP
+            Either.Left(ErrorKeys.SERVER_ERROR)
         } catch (e: Exception) {
+            // Errores no relacionados con HTTP
             Either.Left(ErrorKeys.DATA_ERROR)
         }
     }
@@ -30,8 +35,13 @@ class CharacterRemoteDataSourceImpl(private val client: HttpClient) : CharacterR
             val character: CharacterDto = response.body()
             Either.Right(character)
         } catch (e: ClientRequestException) {
+            // Cualquier error de cliente (400-499) debe devolver CLIENT_ERROR
             Either.Left(ErrorKeys.CLIENT_ERROR)
+        } catch (e: ResponseException) {
+            // Otros errores de respuesta HTTP
+            Either.Left(ErrorKeys.SERVER_ERROR)
         } catch (e: Exception) {
+            // Errores no relacionados con HTTP
             Either.Left(ErrorKeys.DATA_ERROR)
         }
     }
