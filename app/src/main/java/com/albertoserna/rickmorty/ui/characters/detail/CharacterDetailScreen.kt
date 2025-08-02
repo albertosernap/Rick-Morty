@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.albertoserna.rickmorty.ui.components.CachedImage
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,8 +59,8 @@ fun CharacterDetailScreen(
                             .verticalScroll(rememberScrollState())
                             .padding(16.dp)
                     ) {
-                        AsyncImage(
-                            model = character.image,
+                        CachedImage(
+                            imageUrl = character.image,
                             contentDescription = character.name,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

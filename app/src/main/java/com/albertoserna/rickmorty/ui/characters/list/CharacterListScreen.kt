@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.albertoserna.rickmorty.ui.components.CachedImage
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -83,8 +83,8 @@ fun CharacterItem(
                 .fillMaxWidth()
                 .height(100.dp)
         ) {
-            AsyncImage(
-                model = character.image,
+            CachedImage(
+                imageUrl = character.image,
                 contentDescription = character.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
