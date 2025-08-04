@@ -35,7 +35,21 @@ class CharacterListViewModel(
     
     fun loadNextPage() {
         currentPage++
-        loadCharacters()
+        viewModelScope.launch {
+            try {
+                val currentCharacters = when (val currentState = _state.value) {
+                    is CharacterListState.Success -> currentState.characters
+                    else -> emptyList()
+                }
+                
+                val newCharacters = charactersUseCase(currentPage)
+                _state.value = CharacterListState.Success(currentCharacters + newCharacters)
+            } catch (e: Exception) {
+                // Mantener la página actual en caso de error
+                currentPage--
+                _state.value = CharacterListState.Error(e.message ?: "Error loading more characters")
+            }
+        }
     }
 }
 
