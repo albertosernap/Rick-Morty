@@ -6,6 +6,7 @@ import com.albertoserna.rickmorty.domain.model.Character
 import com.albertoserna.rickmorty.domain.usecase.CharactersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CharacterListViewModel(
@@ -16,6 +17,9 @@ class CharacterListViewModel(
     val state: StateFlow<CharacterListState> = _state
     
     private var currentPage = 1
+    private var allCharacters = listOf<Character>()
+    private var speciesFilter: String? = null
+    private var statusFilter: String? = null
     
     init {
         loadCharacters()
@@ -26,7 +30,8 @@ class CharacterListViewModel(
             _state.value = CharacterListState.Loading
             try {
                 val characters = charactersUseCase(currentPage)
-                _state.value = CharacterListState.Success(characters)
+                allCharacters = characters
+                _state.value = CharacterListState.Success(applyFilters(characters))
             } catch (e: Exception) {
                 _state.value = CharacterListState.Error(e.message ?: "Unknown error")
             }
@@ -37,18 +42,37 @@ class CharacterListViewModel(
         currentPage++
         viewModelScope.launch {
             try {
-                val currentCharacters = when (val currentState = _state.value) {
-                    is CharacterListState.Success -> currentState.characters
-                    else -> emptyList()
-                }
-                
                 val newCharacters = charactersUseCase(currentPage)
-                _state.value = CharacterListState.Success(currentCharacters + newCharacters)
+                allCharacters = allCharacters + newCharacters
+                _state.value = CharacterListState.Success(applyFilters(allCharacters))
             } catch (e: Exception) {
                 // Mantener la página actual en caso de error
                 currentPage--
                 _state.value = CharacterListState.Error(e.message ?: "Error loading more characters")
             }
+        }
+    }
+    
+    fun setSpeciesFilter(species: String?) {
+        speciesFilter = species
+        updateFilteredCharacters()
+    }
+    
+    fun setStatusFilter(status: String?) {
+        statusFilter = status
+        updateFilteredCharacters()
+    }
+    
+    private fun updateFilteredCharacters() {
+        if (_state.value is CharacterListState.Success) {
+            _state.update { CharacterListState.Success(applyFilters(allCharacters)) }
+        }
+    }
+    
+    private fun applyFilters(characters: List<Character>): List<Character> {
+        return characters.filter { character ->
+            (speciesFilter == null || character.species.equals(speciesFilter, ignoreCase = true)) &&
+            (statusFilter == null || character.status.equals(statusFilter, ignoreCase = true))
         }
     }
 }

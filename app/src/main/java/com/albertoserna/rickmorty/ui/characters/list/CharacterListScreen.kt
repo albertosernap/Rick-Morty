@@ -3,9 +3,7 @@ package com.albertoserna.rickmorty.ui.characters.list
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -29,35 +27,146 @@ fun CharacterListScreen(
     AppScaffold(
         title = "Characters"
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val currentState = state) {
-                is CharacterListState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                is CharacterListState.Success -> {
-                    CharacterPager(
-                        characters = currentState.characters,
-                        onCharacterClick = onCharacterClick,
-                        onLoadMore = { viewModel.loadNextPage() }
-                    )
-                }
-                is CharacterListState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = currentState.message)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadCharacters() }) {
-                            Text("Retry")
+            FilterSection(viewModel)
+            
+            Box(modifier = Modifier.weight(1f)) {
+                when (val currentState = state) {
+                    is CharacterListState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                    is CharacterListState.Success -> {
+                        CharacterPager(
+                            characters = currentState.characters,
+                            onCharacterClick = onCharacterClick,
+                            onLoadMore = { viewModel.loadNextPage() }
+                        )
+                    }
+                    is CharacterListState.Error -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = currentState.message)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { viewModel.loadCharacters() }) {
+                                Text("Retry")
+                            }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterSection(viewModel: CharacterListViewModel) {
+    var speciesExpanded by remember { mutableStateOf(false) }
+    var statusExpanded by remember { mutableStateOf(false) }
+    var selectedSpecies by remember { mutableStateOf<String?>(null) }
+    var selectedStatus by remember { mutableStateOf<String?>(null) }
+    
+    val speciesOptions = listOf("All", "Human", "Alien")
+    val statusOptions = listOf("All", "Alive", "Dead", "Unknown")
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        // Filtro de especies
+        Box(modifier = Modifier.weight(1f)) {
+            ExposedDropdownMenuBox(
+                expanded = speciesExpanded,
+                onExpandedChange = { speciesExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedSpecies ?: "Species",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    singleLine = true
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = speciesExpanded,
+                    onDismissRequest = { speciesExpanded = false }
+                ) {
+                    speciesOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedSpecies = if (option == "All") null else option
+                                viewModel.setSpeciesFilter(selectedSpecies)
+                                speciesExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        // Filtro de estado
+        Box(modifier = Modifier.weight(1f)) {
+            ExposedDropdownMenuBox(
+                expanded = statusExpanded,
+                onExpandedChange = { statusExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedStatus ?: "Status",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    singleLine = true
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = statusExpanded,
+                    onDismissRequest = { statusExpanded = false }
+                ) {
+                    statusOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedStatus = if (option == "All") null else option
+                                viewModel.setStatusFilter(selectedStatus)
+                                statusExpanded = false
+                            }
+                        )
                     }
                 }
             }
